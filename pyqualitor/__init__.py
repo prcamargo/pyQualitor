@@ -1,29 +1,56 @@
-import logging
 from zeep import Client
-'''
-url = 'https://qltapi.vantix.com.br/qualitor/ws/services/service.php?wsdl=WSTicket'
+import xml.etree.ElementTree as ET
 
-client = Client(url)
+class QualitorAPI:
 
-token = client.service.login('ws.vantix', 'qlt@1!@#', '1')
-print(totken)
-'''
+    def __init__(self,
+                 url='',
+                 user='',
+                 password='',
+                 empresa=1
+    ):
 
-class QualitorAPI(object):
-    def __init__(self, url=''):
+        if not url:
+            raise ValueError ('No URL given for the wsdl')
+
         self.url = url
-
-    def Token(self, login,password, empresa):
-        self.login = login
+        self.user = user
         self.password = password
         self.empresa = empresa
 
-        client = Client(self.url)
-        return client.service.login(login, password, empresa)
+        self.client = Client(self.url)
+
+        self.token = self.client.service.login(self.user, self.password, self.empresa)
+
+    def request(self,method,xml):
+
+        return self.client.service.__getitem__(method)(self.token, xml)
 
 
-class Ticket(object):
-    def __init__(self,)
+    def __getattr__(self, attr):
 
-    
+        return QualitorAPIObjectClass(attr, self)
 
+
+class QualitorAPIObjectClass(object):
+
+        def __init__(self, method, parent):
+            self.method = method
+            self.parent = parent
+
+        def __getattr__(self, attr):
+
+            def fn(**kwargs):
+                wsqualitor = ET.Element('wsqualitor')
+                contents = ET.SubElement(wsqualitor, 'contents')
+                data = ET.SubElement(contents, 'data')
+                for key, value in kwargs.items():
+                    key = ET.SubElement(data, key)
+                    key.text = value
+
+                    #create var XML
+                    cxml = ET.tostring(wsqualitor)
+
+                return self.parent.request(self.method,cxml)
+
+            return fn
