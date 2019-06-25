@@ -1,56 +1,44 @@
 from zeep import Client
 import xml.etree.ElementTree as ET
 
-class QualitorAPI:
 
-    def __init__(self,
-                 url='',
-                 user='',
-                 password='',
-                 empresa=1
-    ):
+class QualitorWS(object):
 
-        if not url:
+    def __init__(self,wsdl):
+
+        self.wsdl = wsdl
+
+        if not wsdl:
             raise ValueError ('No URL given for the wsdl')
 
-        self.url = url
-        self.user = user
+    def login(self, login='', password='', company=1):
+
+        self.login = login
         self.password = password
-        self.empresa = empresa
+        self.company = company
 
-        self.client = Client(self.url)
+        '''Gerando token'''
+        self.client = Client(self.wsdl)
 
-        self.token = self.client.service.login(self.user, self.password, self.empresa)
+        self.token = self.client.service.login(self.login, self.password, self.company)
 
     def request(self,method,xml):
 
-        return self.client.service.__getitem__(method)(self.token, xml)
-
+        return self.client.service.__getitem__(method)(self.token,xml)
 
     def __getattr__(self, attr):
 
-        return QualitorAPIObjectClass(attr, self)
+        def fn(*args, **kwargs):
 
+            wsqualitor = ET.Element('wsqualitor')
+            contents = ET.SubElement(wsqualitor, 'contents')
+            data = ET.SubElement(contents, 'data')
+            for key, value in kwargs.items():
+                key = ET.SubElement(data, key)
+                key.text = value
 
-class QualitorAPIObjectClass(object):
+            cxml = ET.tostring(wsqualitor)
 
-        def __init__(self, method, parent):
-            self.method = method
-            self.parent = parent
+            return self.request(attr,cxml)
 
-        def __getattr__(self, attr):
-
-            def fn(**kwargs):
-                wsqualitor = ET.Element('wsqualitor')
-                contents = ET.SubElement(wsqualitor, 'contents')
-                data = ET.SubElement(contents, 'data')
-                for key, value in kwargs.items():
-                    key = ET.SubElement(data, key)
-                    key.text = value
-
-                    #create var XML
-                    cxml = ET.tostring(wsqualitor)
-
-                return self.parent.request(self.method,cxml)
-
-            return fn
+        return fn

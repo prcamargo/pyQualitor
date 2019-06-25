@@ -18,17 +18,17 @@ $ pip install pyQualitor
 ```
 
 ### Exemplo:
-#####Iniciar um chamado:
+* Iniciar um chamado:
 
 ```python
-import pyQualitor
+from pyQualitor import QualitorWS
 
-qapi = pyQualitor(url='https://qualitor.com.br/qualitor/WSTicket.wsdl',
-                    user='login', 
-                    password='password', 
-                    empresa='1')
-                    
-qapi.startTichek(cdchamado='22222')
+qws = QualitorWS('https://qualitor.com.br/qualitor/WSTicket.wsdl')
+
+qws.login(login='login', password='password')
+        
+qws.startTicket(cdchamado='22222')
+
 
 ```
 
