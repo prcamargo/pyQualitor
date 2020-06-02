@@ -1,4 +1,6 @@
 from zeep import Client
+from zeep.transports import Transport
+from requests import Session
 import xml.etree.ElementTree as ET
 
 
@@ -11,14 +13,24 @@ class QualitorWS(object):
         if not wsdl:
             raise ValueError ('No URL given for the wsdl')
 
-    def login(self, login='', password='', company=1):
+    def login(self, login='', password='', company='1', verify=False):
 
         self.login = login
         self.password = password
         self.company = company
+        self.verify = verify
 
-        '''Gerando token'''
-        self.client = Client(self.wsdl)
+        if verify == False:
+
+            import warnings
+            warnings.filterwarnings('ignore', message='Unverified HTTPS request')
+
+            session = Session()
+            session.verify = False
+            transport = Transport(session=session)
+
+            '''Gerando token'''
+            self.client = Client(self.wsdl, transport=transport)
 
         self.token = self.client.service.login(self.login, self.password, self.company)
 
