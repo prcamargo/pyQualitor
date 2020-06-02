@@ -22,7 +22,7 @@ $ pip install pyQualitor
 * Iniciar um chamado:
 
 ```python
-from pyQualitor import QualitorWS
+from pyqualitor import QualitorWS
 
 qws = QualitorWS('https://qualitor.com.br/qualitor/WSTicket.wsdl')
 
